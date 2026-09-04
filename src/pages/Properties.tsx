@@ -10,12 +10,14 @@ export const Properties: React.FC = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   useEffect(() => {
     const fetchProps = async () => {
       setLoading(true);
       try {
-        const data = await propertyService.getProperties();
+        const data = await propertyService.getProperties(1000);
         setProperties(data);
       } catch (e) {
         console.error(e);
@@ -32,11 +34,22 @@ export const Properties: React.FC = () => {
     return p.address.toLowerCase().includes(query) || p.suburb.toLowerCase().includes(query);
   });
 
+  const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
+  const paginatedProperties = filteredProperties.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Properties</h1>
-        <p className="text-slate-500">Browse and monitor properties across your intelligence network.</p>
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Properties</h1>
+          <p className="text-slate-500">Browse and monitor properties across your intelligence network.</p>
+        </div>
+        <div className="text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+          Showing {filteredProperties.length} Properties
+        </div>
       </div>
 
       <div className="flex gap-4 mb-6">
@@ -47,7 +60,10 @@ export const Properties: React.FC = () => {
             placeholder="Search by address or suburb..."
             className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
           />
         </div>
         <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
@@ -72,14 +88,14 @@ export const Properties: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredProperties.length === 0 ? (
+                {paginatedProperties.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-slate-500">
                       No properties found.
                     </td>
                   </tr>
                 ) : (
-                  filteredProperties.map((prop) => (
+                  paginatedProperties.map((prop) => (
                     <tr key={prop.id} className="hover:bg-slate-50 transition-colors">
                       <td className="p-4 pl-6">
                       <div className="font-bold text-slate-900 mb-0.5">{prop.address}</div>
@@ -118,6 +134,29 @@ export const Properties: React.FC = () => {
                 )))}
               </tbody>
             </table>
+            {totalPages > 1 && (
+              <div className="p-4 border-t border-slate-200 flex items-center justify-between bg-slate-50/50">
+                <span className="text-sm text-slate-500">
+                  Page {currentPage} of {totalPages} ({filteredProperties.length} total)
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    className="px-3 py-1.5 bg-white border border-slate-200 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    className="px-3 py-1.5 bg-white border border-slate-200 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

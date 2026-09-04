@@ -5,12 +5,12 @@ import { mapDatabaseProperty } from '../lib/mapping';
 import { mockProperties } from '../mock';
 
 export const propertyService = {
-  async getProperties(): Promise<Property[]> {
+  async getProperties(limit: number = 1000): Promise<Property[]> {
     const { data, error } = await supabase
       .from('properties')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(50);
+      .limit(limit);
       
     if (error || !data || data.length === 0) {
       if (error) console.error('Error fetching properties:', error);
@@ -41,7 +41,7 @@ export const propertyService = {
       .from('properties')
       .select('*')
       .or(`address.ilike.%${lowerQuery}%,suburb_name.ilike.%${lowerQuery}%`)
-      .limit(50);
+      .limit(500);
       
     if (error) {
       console.error('Error searching properties:', error);
