@@ -1,10 +1,15 @@
-import type { Opportunity } from '../types';
+import type { Opportunity, Property, PropertyEvent } from '../types';
 import { supabase } from '../lib/supabase';
-import { mapDatabaseOpportunity } from '../lib/mapping';
+import { mapDatabaseOpportunity, mapDatabaseProperty, mapDatabaseEvent } from '../lib/mapping';
+
+export interface ResolvedOpportunity extends Opportunity {
+  property: Property;
+  event: PropertyEvent;
+}
 
 export const opportunityService = {
-  async getOpportunities(): Promise<Opportunity[]> {
-    // 1. Fetch scores
+  async getOpportunities(): Promise<ResolvedOpportunity[]> {
+    // 1. Fetch top scores
     const { data: scores, error: scoreErr } = await supabase
       .from('opportunity_scores')
       .select('*')
@@ -13,41 +18,49 @@ export const opportunityService = {
       
     if (scoreErr || !scores || scores.length === 0) return [];
     
-    // 2. Fetch associated events
+    // 2. Fetch associated properties and events
     const propertyIds = scores.map(s => s.property_id);
-    const { data: events } = await supabase
+    const { data: dbProperties } = await supabase
+      .from('properties')
+      .select('*')
+      .in('id', propertyIds);
+      
+    const { data: dbEvents } = await supabase
       .from('events')
       .select('*')
       .in('property_id', propertyIds);
       
-    // 3. Fetch ai_explanations
-    const eventIds = (events || []).map(e => e.id);
-    const { data: explanations } = eventIds.length > 0 
-      ? await supabase.from('ai_explanations').select('*').in('event_id', eventIds)
-      : { data: [] };
-      
-    // 4. Fetch score_factors
+    // 3. Fetch score_factors
     const scoreIds = scores.map(s => s.id);
     const { data: factors } = scoreIds.length > 0
       ? await supabase.from('score_factors').select('*').in('score_id', scoreIds)
       : { data: [] };
 
-    const opportunities: Opportunity[] = [];
+    const resolvedOpportunities: ResolvedOpportunity[] = [];
+    const props = (dbProperties || []).map(mapDatabaseProperty);
     
     for (const score of scores) {
       // Find latest event for this property
-      const propEvents = (events || []).filter(e => e.property_id === score.property_id);
+      const propEvents = (dbEvents || []).filter(e => e.property_id === score.property_id);
       const latestEvent = propEvents.sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())[0];
       
-      if (!latestEvent) continue; 
+      const prop = props.find(p => p.id === score.property_id.toString());
       
-      const explanation = (explanations || []).find(e => e.event_id === latestEvent.id);
+      if (!latestEvent || !prop) continue; 
+      
       const scoreFactors = (factors || []).filter(f => f.score_id === score.id);
       
-      opportunities.push(mapDatabaseOpportunity(latestEvent, score, explanation, scoreFactors));
+      const baseOpp = mapDatabaseOpportunity(latestEvent, score, null, scoreFactors);
+      const mappedEvent = mapDatabaseEvent(latestEvent);
+      
+      resolvedOpportunities.push({
+        ...baseOpp,
+        property: prop,
+        event: mappedEvent
+      });
     }
     
-    return opportunities;
+    return resolvedOpportunities;
   },
 
   async getOpportunityById(id: string): Promise<Opportunity | undefined> {

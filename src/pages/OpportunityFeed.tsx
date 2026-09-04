@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { opportunityService } from '../services/opportunityService';
-import { propertyService } from '../services/propertyService';
-import { eventService } from '../services/eventService';
 import { OpportunityCard } from '../components/OpportunityCard';
-import type { ResolvedOpportunity } from '../components/OpportunityCard';
+import type { ResolvedOpportunity } from '../services/opportunityService';
 import { SlidersHorizontal } from 'lucide-react';
 
 export const OpportunityFeed: React.FC = () => {
@@ -14,16 +12,7 @@ export const OpportunityFeed: React.FC = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const opps = await opportunityService.getOpportunities();
-        const props = await propertyService.getProperties();
-        const events = await eventService.getEvents();
-
-        const resolved = opps.map(opp => ({
-          ...opp,
-          property: props.find(p => p.id === opp.propertyId)!,
-          event: events.find(e => e.id === opp.eventId)!,
-        })).filter(o => o.property && o.event);
-
+        const resolved = await opportunityService.getOpportunities();
         setOpportunities(resolved);
       } catch (error) {
         console.error('Error fetching data', error);
