@@ -16,6 +16,16 @@ export interface Property {
   currentPrice: number | null;
   status: PropertyStatus;
   imageUrl?: string;
+  // Extended Foundation Data
+  estimatedValue?: number;
+  lastSalePrice?: number;
+  lastSaleDate?: string;
+  latitude?: number;
+  longitude?: number;
+  ownershipPeriodYears?: number;
+  ownerType?: string;
+  vacancyStatus?: string;
+  rentalActivity?: string;
 }
 
 export type EventType =
@@ -23,7 +33,13 @@ export type EventType =
   | 'PRICE_DROP'
   | 'PRICE_INCREASE'
   | 'LISTING_WITHDRAWN'
-  | 'RELISTED';
+  | 'RELISTED'
+  | 'OWNERSHIP_CHANGE'
+  | 'LONG_OWNERSHIP'
+  | 'PLANNING_APPLICATION'
+  | 'PROBATE_SIGNAL'
+  | 'RENTAL_ACTIVITY'
+  | 'VACANCY_SIGNAL';
 
 export interface PropertyEvent {
   id: string;
@@ -33,6 +49,10 @@ export interface PropertyEvent {
   newValue: string | number | null;
   detectedAt: string; // ISO date string
   importance: 'LOW' | 'MEDIUM' | 'HIGH';
+  source?: string;
+  description?: string;
+  confidenceScore?: number; // 0.0 - 1.0
+  priorityLevel?: OpportunityPriority;
 }
 
 export type SignalType =
@@ -43,7 +63,13 @@ export type SignalType =
   | 'PROPERTY_TYPE_MATCH'
   | 'NEW_LISTING'
   | 'LISTING_WITHDRAWN'
-  | 'RELISTED';
+  | 'RELISTED'
+  | 'OWNERSHIP_CHANGE'
+  | 'LONG_OWNERSHIP'
+  | 'PLANNING_APPLICATION'
+  | 'PROBATE_SIGNAL'
+  | 'RENTAL_ACTIVITY'
+  | 'VACANCY_SIGNAL';
 
 export type SignalImpact = 'LOW' | 'MEDIUM' | 'HIGH';
 
@@ -57,7 +83,7 @@ export interface Signal {
   impact: SignalImpact;
 }
 
-export type OpportunityPriority = 'LOW' | 'MODERATE' | 'HIGH' | 'PRIORITY';
+export type OpportunityPriority = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL' | 'PRIORITY';
 
 export interface Opportunity {
   id: string;
@@ -97,7 +123,7 @@ export interface Watchlist {
 export interface Alert {
   id: string;
   name: string;
-  type: EventType | 'HIGH_OPPORTUNITY';
+  type: EventType | 'HIGH_OPPORTUNITY' | 'CRITICAL_OPPORTUNITY';
   condition: string;
   location: string;
   isActive: boolean;

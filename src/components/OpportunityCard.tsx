@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Opportunity, Property, PropertyEvent } from '../types';
 import { formatCurrency, formatRelativeTime } from '../utils';
 import { useNavigate } from 'react-router-dom';
-import { Flame, BrainCircuit, CheckCircle2, ChevronRight, MapPin, Building2, TrendingDown, TrendingUp, AlertCircle, BookmarkPlus } from 'lucide-react';
+import { Flame, BrainCircuit, CheckCircle2, ChevronRight, MapPin, Building2, TrendingDown, TrendingUp, AlertCircle, BookmarkPlus, BookmarkCheck } from 'lucide-react';
+import { watchlistService } from '../services/watchlistService';
 
 export interface ResolvedOpportunity extends Opportunity {
   property: Property;
@@ -20,26 +21,48 @@ const getEventIcon = (type: string) => {
     case 'NEW_LISTING': return <AlertCircle className="text-brand-500" size={20} />;
     case 'LISTING_WITHDRAWN': return <AlertCircle className="text-slate-500" size={20} />;
     case 'RELISTED': return <AlertCircle className="text-blue-500" size={20} />;
+    case 'PROBATE_SIGNAL': return <AlertCircle className="text-purple-600" size={20} />;
+    case 'VACANCY_SIGNAL': return <AlertCircle className="text-red-500" size={20} />;
     default: return <AlertCircle size={20} />;
   }
 };
 
 const getEventLabel = (type: string) => {
-  return type.replace('_', ' ');
+  return type.replace(/_/g, ' ');
 };
 
 export const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
   const navigate = useNavigate();
   const { property, event, score, priority, signals, aiSummary } = opportunity;
+  const [inWatchlist, setInWatchlist] = useState(() => watchlistService.isPropertyInAnyWatchlist(property.id));
+
+  const handleWatchlistToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const defaultWatchlist = watchlistService.getWatchlists()[0];
+    if (!defaultWatchlist) return;
+
+    if (inWatchlist) {
+      watchlistService.removePropertyFromWatchlist(defaultWatchlist.id, property.id);
+      setInWatchlist(false);
+    } else {
+      watchlistService.addPropertyToWatchlist(defaultWatchlist.id, property.id);
+      setInWatchlist(true);
+    }
+  };
 
   return (
     <div className="premium-card p-6 hover:border-brand-300 transition-colors cursor-pointer" onClick={() => navigate(`/properties/${property.id}`)}>
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
-          {priority === 'PRIORITY' || priority === 'HIGH' ? (
+          {priority === 'CRITICAL' ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold tracking-wide">
+              <Flame size={14} />
+              CRITICAL OPPORTUNITY
+            </div>
+          ) : priority === 'HIGH' || priority === 'PRIORITY' ? (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold tracking-wide">
               <Flame size={14} />
-              {priority} PRIORITY
+              HIGH PRIORITY
             </div>
           ) : (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold tracking-wide">
@@ -117,11 +140,20 @@ export const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity })
 
       <div className="mt-6 pt-4 border-t border-slate-100 flex justify-end gap-3">
         <button 
-          onClick={(e) => { e.stopPropagation(); /* Add to watchlist */ }} 
+          onClick={handleWatchlistToggle} 
           className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
         >
-          <BookmarkPlus size={16} />
-          Add to Watchlist
+          {inWatchlist ? (
+            <>
+              <BookmarkCheck size={16} className="text-brand-600" />
+              In Watchlist
+            </>
+          ) : (
+            <>
+              <BookmarkPlus size={16} />
+              Add to Watchlist
+            </>
+          )}
         </button>
         <button 
           onClick={() => navigate(`/properties/${property.id}`)}

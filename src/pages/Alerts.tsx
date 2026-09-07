@@ -1,13 +1,30 @@
 import React, { useState } from 'react';
-import { mockAlerts } from '../mock';
-import { Bell, BellOff, Settings2, Plus } from 'lucide-react';
+import { alertService } from '../services/alertService';
+import type { Alert, EventType } from '../types';
+import { Bell, BellOff, Settings2, Plus, X } from 'lucide-react';
 import { cn } from '../utils';
 
 export const Alerts: React.FC = () => {
-  const [alerts, setAlerts] = useState(mockAlerts);
+  const [alerts, setAlerts] = useState<Alert[]>(() => alertService.getAlerts());
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [name, setName] = useState('');
+  const [type, setType] = useState<EventType | 'HIGH_OPPORTUNITY'>('PRICE_DROP');
+  const [condition, setCondition] = useState('');
+  const [location, setLocation] = useState('All Locations');
 
   const toggleAlert = (id: string) => {
-    setAlerts(alerts.map(a => a.id === id ? { ...a, isActive: !a.isActive } : a));
+    const updated = alertService.toggleAlert(id);
+    setAlerts(updated);
+  };
+
+  const handleCreateAlert = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !condition.trim()) return;
+    alertService.createAlert(name.trim(), type, condition.trim(), location.trim());
+    setAlerts(alertService.getAlerts());
+    setName('');
+    setCondition('');
+    setShowCreateModal(false);
   };
 
   return (
@@ -15,27 +32,15 @@ export const Alerts: React.FC = () => {
       <div className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Alerts</h1>
-          <p className="text-slate-500">Manage notifications for market events and opportunities.</p>
+          <p className="text-slate-500">Manage notifications for market events, score changes, and off-market opportunities.</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white font-medium rounded-lg hover:bg-brand-700 transition-colors">
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white font-medium rounded-lg hover:bg-brand-700 transition-colors shadow-sm text-sm"
+        >
           <Plus size={18} />
           Create Alert
         </button>
-      </div>
-
-      <div className="bg-amber-50 border-l-4 border-amber-500 p-4 mb-8 rounded-r-lg">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <p className="text-sm text-amber-700 font-medium">
-              Note: This feature is currently using mock data. Full database connection for Alerts is pending.
-            </p>
-          </div>
-        </div>
       </div>
 
       <div className="space-y-4">
@@ -43,7 +48,7 @@ export const Alerts: React.FC = () => {
           <div key={alert.id} className="premium-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-start gap-4">
               <div className={cn(
-                "p-3 rounded-xl",
+                "p-3 rounded-xl shrink-0",
                 alert.isActive ? "bg-brand-50 text-brand-600" : "bg-slate-100 text-slate-400"
               )}>
                 {alert.isActive ? <Bell size={24} /> : <BellOff size={24} />}
@@ -55,7 +60,7 @@ export const Alerts: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
                   <span className="bg-slate-100 px-2 py-1 rounded">
-                    Type: {alert.type.replace('_', ' ')}
+                    Type: {alert.type.replace(/_/g, ' ')}
                   </span>
                   <span className="bg-slate-100 px-2 py-1 rounded">
                     Location: {alert.location}
@@ -64,13 +69,13 @@ export const Alerts: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex items-center gap-4 border-t border-slate-100 md:border-0 pt-4 md:pt-0">
+            <div className="flex items-center gap-4 border-t border-slate-100 md:border-0 pt-4 md:pt-0 shrink-0">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-slate-600">{alert.isActive ? 'Active' : 'Paused'}</span>
                 <button 
                   onClick={() => toggleAlert(alert.id)}
                   className={cn(
-                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer",
                     alert.isActive ? "bg-brand-500" : "bg-slate-200"
                   )}
                 >
@@ -89,6 +94,89 @@ export const Alerts: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Create Alert Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-6 shadow-2xl">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-bold text-slate-900">Create New Alert Rule</h2>
+              <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleCreateAlert} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Alert Name</label>
+                <input 
+                  type="text"
+                  required
+                  placeholder="e.g. Parramatta Price Drop Alert"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Event Type</label>
+                <select 
+                  value={type} 
+                  onChange={(e) => setType(e.target.value as any)}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
+                >
+                  <option value="PRICE_DROP">Price Drop</option>
+                  <option value="HIGH_OPPORTUNITY">High Opportunity Score (&gt;75)</option>
+                  <option value="CRITICAL_OPPORTUNITY">Critical Opportunity Score (&gt;85)</option>
+                  <option value="PROBATE_SIGNAL">Probate / Estate Notice</option>
+                  <option value="VACANCY_SIGNAL">Vacancy Signal (60+ Days)</option>
+                  <option value="LISTING_WITHDRAWN">Listing Withdrawn Unsold</option>
+                  <option value="NEW_LISTING">New Listing</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Trigger Condition</label>
+                <input 
+                  type="text"
+                  required
+                  placeholder="e.g. Asking price drops by >5% or score > 80"
+                  value={condition}
+                  onChange={(e) => setCondition(e.target.value)}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Location Filter</label>
+                <input 
+                  type="text"
+                  placeholder="e.g. Parramatta NSW or All Locations"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button 
+                  type="button" 
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 transition-colors"
+                >
+                  Create Alert
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
