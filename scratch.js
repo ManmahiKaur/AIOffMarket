@@ -1,1 +1,1 @@
-// Scratch pad for temporary testing
+// Scratch pad for quick testing
