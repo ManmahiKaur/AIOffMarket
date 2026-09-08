@@ -1,10 +1,10 @@
 import type { PropertyEvent } from '../types';
-import { liveDb } from '../lib/dbClient';
+import { supabase } from '../lib/supabase';
 import { mapDatabaseEvent } from '../lib/mapping';
 
 export const eventService = {
   async getEvents(eventType?: string): Promise<PropertyEvent[]> {
-    let query = liveDb
+    let query = supabase
       .from('events')
       .select('*')
       .order('detected_at', { ascending: false });
@@ -24,7 +24,7 @@ export const eventService = {
   },
 
   async getEventsByPropertyId(propertyId: string): Promise<PropertyEvent[]> {
-    const { data, error } = await liveDb
+    const { data, error } = await supabase
       .from('events')
       .select('*')
       .eq('property_id', propertyId)

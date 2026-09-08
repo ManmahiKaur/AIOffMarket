@@ -1,8 +1,11 @@
-/**
- * Legacy Supabase adapter forwarder.
- * Supabase client has been removed and replaced by liveDb (VITE_LIVE_DATABASE_URL).
- */
-import { liveDb } from './dbClient';
+import { createClient } from '@supabase/supabase-js';
 
-export const supabase = liveDb;
-export default liveDb;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("Missing Supabase credentials in environment variables.");
+}
+
+export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+export default supabase;

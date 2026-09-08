@@ -1,5 +1,5 @@
 import type { Opportunity, Property, PropertyEvent } from '../types';
-import { liveDb } from '../lib/dbClient';
+import { supabase } from '../lib/supabase';
 import { mapDatabaseOpportunity, mapDatabaseProperty, mapDatabaseEvent } from '../lib/mapping';
 
 export interface ResolvedOpportunity extends Opportunity {
@@ -14,7 +14,7 @@ export interface OpportunityFilters {
 
 export const opportunityService = {
   async getOpportunities(filters?: OpportunityFilters): Promise<ResolvedOpportunity[]> {
-    let query = liveDb
+    let query = supabase
       .from('opportunity_scores')
       .select('*')
       .order('score', { ascending: false });
@@ -30,12 +30,12 @@ export const opportunityService = {
     
     // 2. Fetch associated properties and events
     const propertyIds = scores.map(s => s.property_id);
-    const { data: dbProperties } = await liveDb
+    const { data: dbProperties } = await supabase
       .from('properties')
       .select('*')
       .in('id', propertyIds);
       
-    const { data: dbEvents } = await liveDb
+    const { data: dbEvents } = await supabase
       .from('events')
       .select('*')
       .in('property_id', propertyIds);
@@ -43,7 +43,7 @@ export const opportunityService = {
     // 3. Fetch score_factors
     const scoreIds = scores.map(s => s.id);
     const { data: factors } = scoreIds.length > 0
-      ? await liveDb.from('score_factors').select('*').in('score_id', scoreIds)
+      ? await supabase.from('score_factors').select('*').in('score_id', scoreIds)
       : { data: [] };
 
     let resolvedOpportunities: ResolvedOpportunity[] = [];
@@ -83,37 +83,37 @@ export const opportunityService = {
   },
 
   async getOpportunityById(id: string): Promise<Opportunity | undefined> {
-    const { data: events } = await liveDb.from('events').select('*').eq('id', id).limit(1);
+    const { data: events } = await supabase.from('events').select('*').eq('id', id).limit(1);
     if (!events || events.length === 0) return undefined;
     const event = events[0];
     
-    const { data: scores } = await liveDb.from('opportunity_scores').select('*').eq('property_id', event.property_id).order('computed_at', { ascending: false }).limit(1);
+    const { data: scores } = await supabase.from('opportunity_scores').select('*').eq('property_id', event.property_id).order('computed_at', { ascending: false }).limit(1);
     const score = scores?.[0];
     
-    const { data: explanations } = await liveDb.from('ai_explanations').select('*').eq('event_id', event.id).limit(1);
+    const { data: explanations } = await supabase.from('ai_explanations').select('*').eq('event_id', event.id).limit(1);
     const explanation = explanations?.[0];
     
     const { data: factors } = score 
-      ? await liveDb.from('score_factors').select('*').eq('score_id', score.id) 
+      ? await supabase.from('score_factors').select('*').eq('score_id', score.id) 
       : { data: [] };
     
     return mapDatabaseOpportunity(event, score, explanation, factors || []);
   },
 
   async getOpportunitiesByPropertyId(propertyId: string): Promise<Opportunity[]> {
-    const { data: events } = await liveDb.from('events').select('*').eq('property_id', propertyId);
+    const { data: events } = await supabase.from('events').select('*').eq('property_id', propertyId);
     if (!events || events.length === 0) return [];
     
-    const { data: scores } = await liveDb.from('opportunity_scores').select('*').eq('property_id', propertyId);
+    const { data: scores } = await supabase.from('opportunity_scores').select('*').eq('property_id', propertyId);
     
     const eventIds = events.map(e => e.id);
     const { data: explanations } = eventIds.length > 0 
-      ? await liveDb.from('ai_explanations').select('*').in('event_id', eventIds)
+      ? await supabase.from('ai_explanations').select('*').in('event_id', eventIds)
       : { data: [] };
       
     const scoreIds = (scores || []).map(s => s.id);
     const { data: factors } = scoreIds.length > 0 
-      ? await liveDb.from('score_factors').select('*').in('score_id', scoreIds) 
+      ? await supabase.from('score_factors').select('*').in('score_id', scoreIds) 
       : { data: [] };
 
     return events.map(event => {

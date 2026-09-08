@@ -6,7 +6,7 @@ import { eventService } from '../services/eventService';
 import type { Opportunity, Property, PropertyEvent } from '../types';
 import { formatRelativeTime } from '../utils';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Zap, Flame, Bookmark, ArrowRight } from 'lucide-react';
+import { Building2, Zap, Flame, Bookmark, ArrowRight, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export const Dashboard: React.FC = () => {
@@ -16,6 +16,28 @@ export const Dashboard: React.FC = () => {
   const [distributionData, setDistributionData] = useState<any[]>([]);
   const [highPriorityOpps, setHighPriorityOpps] = useState<(Opportunity & { property: Property, event: PropertyEvent })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setSyncStatus(null);
+    try {
+      const res = await fetch('/api/sync-propradar', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        setSyncStatus({ type: 'success', message: `Sync complete — ${data.imported} new properties imported.` });
+        // Refresh dashboard data after sync
+        window.location.reload();
+      } else {
+        setSyncStatus({ type: 'error', message: data.error || 'Sync failed.' });
+      }
+    } catch (err) {
+      setSyncStatus({ type: 'error', message: 'Could not reach sync endpoint.' });
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -72,9 +94,32 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Good morning!</h1>
-        <p className="text-slate-500">Monitor property events and discover emerging off-market opportunities.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Good morning!</h1>
+          <p className="text-slate-500">Monitor property events and discover emerging off-market opportunities.</p>
+        </div>
+        <div className="flex flex-col items-end gap-2 flex-shrink-0">
+          <button
+            id="sync-propradar-btn"
+            onClick={handleSync}
+            disabled={syncing}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow"
+          >
+            <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
+            {syncing ? 'Syncing PropRadar...' : 'Sync PropRadar'}
+          </button>
+          {syncStatus && (
+            <div className={`flex items-center gap-1.5 text-xs font-medium ${
+              syncStatus.type === 'success' ? 'text-emerald-600' : 'text-red-500'
+            }`}>
+              {syncStatus.type === 'success' 
+                ? <CheckCircle size={13} /> 
+                : <AlertCircle size={13} />}
+              {syncStatus.message}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Top Metrics */}

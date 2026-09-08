@@ -1,4 +1,4 @@
-import { liveDb } from '../lib/dbClient';
+import { supabase } from '../lib/supabase';
 
 export interface DashboardMetrics {
   propertiesMonitored: number;
@@ -9,23 +9,23 @@ export interface DashboardMetrics {
 
 export const dashboardService = {
   async getMetrics(): Promise<DashboardMetrics> {
-    const { count: propertiesCount } = await liveDb
+    const { count: propertiesCount } = await supabase
       .from('properties')
       .select('*', { count: 'exact', head: true });
       
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     
-    const { count: eventsCount } = await liveDb
+    const { count: eventsCount } = await supabase
       .from('events')
       .select('*', { count: 'exact', head: true })
       .gte('detected_at', oneDayAgo);
       
-    const { count: highPriorityCount } = await liveDb
+    const { count: highPriorityCount } = await supabase
       .from('opportunity_scores')
       .select('*', { count: 'exact', head: true })
       .gte('score', 0.8);
       
-    const { count: watchlistMatches } = await liveDb
+    const { count: watchlistMatches } = await supabase
       .from('watchlist_items')
       .select('*', { count: 'exact', head: true })
       .gte('added_at', oneDayAgo);
@@ -51,7 +51,7 @@ export const dashboardService = {
   },
 
   async getEventDistributionData() {
-    const { data } = await liveDb
+    const { data } = await supabase
       .from('events')
       .select('event_type')
       .limit(100);
