@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, Bell } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const Header: React.FC = () => {
   return (
@@ -9,13 +10,13 @@ export const Header: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-6 text-slate-500">
-        <button className="hover:text-slate-900 transition-colors">
+        <Link to="/properties" className="hover:text-slate-900 transition-colors">
           <Search size={20} />
-        </button>
-        <button className="hover:text-slate-900 transition-colors relative">
+        </Link>
+        <Link to="/alerts" className="hover:text-slate-900 transition-colors relative">
           <Bell size={20} />
           <span className="absolute top-0 right-0 w-2 h-2 bg-destructive rounded-full border border-white"></span>
-        </button>
+        </Link>
       </div>
     </header>
   );

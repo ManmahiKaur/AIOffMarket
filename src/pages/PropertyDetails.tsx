@@ -28,6 +28,9 @@ export const PropertyDetails: React.FC = () => {
   const [events, setEvents] = useState<PropertyEvent[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savingWatchlist, setSavingWatchlist] = useState(false);
+  const [savingAlert, setSavingAlert] = useState(false);
+  const [message, setMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -56,8 +59,67 @@ export const PropertyDetails: React.FC = () => {
 
   const activeOpp = opportunities[0]; // Display the highest priority opportunity if exists
 
+  const handleAddToWatchlist = async () => {
+    setSavingWatchlist(true);
+    setMessage(null);
+    try {
+      const { supabase } = await import('../lib/supabase');
+      // Using a dummy user_id for POC since Auth is not fully implemented
+      const mockUserId = '00000000-0000-0000-0000-000000000000';
+      const { error } = await supabase.from('saved_properties').insert([
+        { user_id: mockUserId, property_id: property.id }
+      ]);
+      if (error) {
+        if (error.code === '42P01') {
+          setMessage({ type: 'error', text: 'Database migration required: saved_properties table is missing.' });
+        } else if (error.code === '23505') {
+          setMessage({ type: 'error', text: 'Property is already in your watchlist.' });
+        } else {
+          setMessage({ type: 'error', text: error.message });
+        }
+      } else {
+        setMessage({ type: 'success', text: 'Property added to watchlist!' });
+      }
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setSavingWatchlist(false);
+    }
+  };
+
+  const handleCreateAlert = async () => {
+    setSavingAlert(true);
+    setMessage(null);
+    try {
+      const { supabase } = await import('../lib/supabase');
+      const mockUserId = '00000000-0000-0000-0000-000000000000';
+      const { error } = await supabase.from('alerts').insert([
+        { user_id: mockUserId, type: 'PROPERTY_ALERT', target_id: property.id }
+      ]);
+      if (error) {
+         setMessage({ type: 'error', text: error.message });
+      } else {
+         setMessage({ type: 'success', text: 'Alert created successfully!' });
+      }
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setSavingAlert(false);
+    }
+  };
+
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto relative">
+      {message && (
+        <div className={cn(
+          "fixed top-20 right-8 p-4 rounded-lg shadow-lg z-50 text-sm font-medium transition-all animate-in fade-in slide-in-from-top-5",
+          message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+        )}>
+          {message.text}
+          <button onClick={() => setMessage(null)} className="ml-4 opacity-70 hover:opacity-100">×</button>
+        </div>
+      )}
+
       <button 
         onClick={() => navigate(-1)}
         className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 mb-6 transition-colors"
@@ -90,13 +152,21 @@ export const PropertyDetails: React.FC = () => {
         </div>
         
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+          <button 
+            onClick={handleAddToWatchlist}
+            disabled={savingWatchlist}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+          >
             <BookmarkPlus size={16} />
-            Add to Watchlist
+            {savingWatchlist ? 'Saving...' : 'Add to Watchlist'}
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 transition-colors">
+          <button 
+            onClick={handleCreateAlert}
+            disabled={savingAlert}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50"
+          >
             <BellPlus size={16} />
-            Create Alert
+            {savingAlert ? 'Creating...' : 'Create Alert'}
           </button>
         </div>
       </div>

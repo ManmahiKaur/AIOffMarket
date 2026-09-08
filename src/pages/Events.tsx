@@ -22,12 +22,13 @@ const getEventLabel = (type: string) => type.replace('_', ' ');
 export const Events: React.FC = () => {
   const [events, setEvents] = useState<(PropertyEvent & { property: Property })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<string>('ALL');
 
   useEffect(() => {
     const fetchEvents = async () => {
       setLoading(true);
       try {
-        const evts = await eventService.getEvents();
+        const evts = await eventService.getEvents(activeTab);
         const props = await propertyService.getProperties();
         
         const enrichedEvents = evts.map(e => ({
@@ -43,7 +44,7 @@ export const Events: React.FC = () => {
       }
     };
     fetchEvents();
-  }, []);
+  }, [activeTab]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -52,23 +53,26 @@ export const Events: React.FC = () => {
         <p className="text-slate-500">Monitor all detected changes across properties.</p>
       </div>
 
-      {/* Filters (Mock) */}
+      {/* Filters */}
       <div className="flex gap-4 border-b border-slate-200 pb-px overflow-x-auto">
-        <button className="px-4 py-3 border-b-2 border-brand-600 text-brand-700 font-medium text-sm whitespace-nowrap">
-          All Events
-        </button>
-        <button className="px-4 py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm whitespace-nowrap">
-          Price Changes
-        </button>
-        <button className="px-4 py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm whitespace-nowrap">
-          New Listings
-        </button>
-        <button className="px-4 py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm whitespace-nowrap">
-          Withdrawals
-        </button>
-        <button className="px-4 py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm whitespace-nowrap">
-          Relistings
-        </button>
+        {[
+          { id: 'ALL', label: 'All Events' },
+          { id: 'NEW_LISTING', label: 'New Listings' },
+          { id: 'WITHDRAWN', label: 'Withdrawals' },
+          { id: 'RELISTED', label: 'Relistings' },
+          { id: 'SOLD', label: 'Sold' },
+        ].map(tab => (
+          <button 
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              "px-4 py-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors",
+              activeTab === tab.id ? "border-brand-600 text-brand-700" : "border-transparent text-slate-500 hover:text-slate-700"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div className="premium-card p-0 overflow-hidden">

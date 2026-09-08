@@ -13,6 +13,40 @@ interface OpportunityCardProps {
   opportunity: ResolvedOpportunity;
 }
 
+export const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
+  const navigate = useNavigate();
+  const { property, event, score, priority, signals, aiSummary } = opportunity;
+  const [saving, setSaving] = React.useState(false);
+  const [message, setMessage] = React.useState<{type: 'success'|'error', text: string} | null>(null);
+
+  const handleAddToWatchlist = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSaving(true);
+    setMessage(null);
+    try {
+      const { supabase } = await import('../lib/supabase');
+      const mockUserId = '00000000-0000-0000-0000-000000000000';
+      const { error } = await supabase.from('saved_properties').insert([
+        { user_id: mockUserId, property_id: property.id }
+      ]);
+      if (error) {
+        if (error.code === '42P01') {
+          setMessage({ type: 'error', text: 'Database migration required: saved_properties table is missing.' });
+        } else if (error.code === '23505') {
+          setMessage({ type: 'error', text: 'Property is already in your watchlist.' });
+        } else {
+          setMessage({ type: 'error', text: error.message });
+        }
+      } else {
+        setMessage({ type: 'success', text: 'Added to watchlist!' });
+      }
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
 const getEventIcon = (type: string) => {
   switch (type) {
     case 'PRICE_DROP': return <TrendingDown className="text-destructive" size={20} />;
@@ -28,12 +62,14 @@ const getEventLabel = (type: string) => {
   return type.replace('_', ' ');
 };
 
-export const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
-  const navigate = useNavigate();
-  const { property, event, score, priority, signals, aiSummary } = opportunity;
-
   return (
-    <div className="premium-card p-6 hover:border-brand-300 transition-colors cursor-pointer" onClick={() => navigate(`/properties/${property.id}`)}>
+    <div className="premium-card p-6 hover:border-brand-300 transition-colors cursor-pointer relative" onClick={() => navigate(`/properties/${property.id}`)}>
+      {message && (
+        <div className={`absolute top-4 right-4 p-3 rounded-lg shadow-lg z-50 text-sm font-medium transition-all ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+          {message.text}
+          <button onClick={(e) => { e.stopPropagation(); setMessage(null); }} className="ml-4 opacity-70 hover:opacity-100">×</button>
+        </div>
+      )}
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
           {priority === 'PRIORITY' || priority === 'HIGH' ? (
@@ -117,11 +153,12 @@ export const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity })
 
       <div className="mt-6 pt-4 border-t border-slate-100 flex justify-end gap-3">
         <button 
-          onClick={(e) => { e.stopPropagation(); /* Add to watchlist */ }} 
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+          onClick={handleAddToWatchlist}
+          disabled={saving}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
         >
           <BookmarkPlus size={16} />
-          Add to Watchlist
+          {saving ? 'Saving...' : 'Add to Watchlist'}
         </button>
         <button 
           onClick={() => navigate(`/properties/${property.id}`)}

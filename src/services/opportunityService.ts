@@ -7,14 +7,24 @@ export interface ResolvedOpportunity extends Opportunity {
   event: PropertyEvent;
 }
 
+export interface OpportunityFilters {
+  eventTypes?: string[];
+  minScore?: number;
+}
+
 export const opportunityService = {
-  async getOpportunities(): Promise<ResolvedOpportunity[]> {
-    // 1. Fetch top scores
-    const { data: scores, error: scoreErr } = await supabase
+  async getOpportunities(filters?: OpportunityFilters): Promise<ResolvedOpportunity[]> {
+    let query = supabase
       .from('opportunity_scores')
       .select('*')
-      .order('score', { ascending: false })
-      .limit(20);
+      .order('score', { ascending: false });
+
+    if (filters?.minScore !== undefined) {
+      query = query.gte('score', filters.minScore);
+    }
+    
+    // 1. Fetch top scores
+    const { data: scores, error: scoreErr } = await query.limit(50);
       
     if (scoreErr || !scores || scores.length === 0) return [];
     
@@ -36,7 +46,7 @@ export const opportunityService = {
       ? await supabase.from('score_factors').select('*').in('score_id', scoreIds)
       : { data: [] };
 
-    const resolvedOpportunities: ResolvedOpportunity[] = [];
+    let resolvedOpportunities: ResolvedOpportunity[] = [];
     const props = (dbProperties || []).map(mapDatabaseProperty);
     
     for (const score of scores) {
@@ -47,6 +57,13 @@ export const opportunityService = {
       const prop = props.find(p => p.id === score.property_id.toString());
       
       if (!latestEvent || !prop) continue; 
+      
+      // Apply event type filter
+      if (filters?.eventTypes && filters.eventTypes.length > 0) {
+        if (!filters.eventTypes.includes(latestEvent.event_type)) {
+          continue;
+        }
+      }
       
       const scoreFactors = (factors || []).filter(f => f.score_id === score.id);
       
@@ -60,7 +77,8 @@ export const opportunityService = {
       });
     }
     
-    return resolvedOpportunities;
+    // limit to 20 after filtering
+    return resolvedOpportunities.slice(0, 20);
   },
 
   async getOpportunityById(id: string): Promise<Opportunity | undefined> {

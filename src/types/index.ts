@@ -90,8 +90,12 @@ export interface Watchlist {
   id: string;
   name: string;
   description?: string;
-  propertyIds: string[];
-  lastUpdated: string;
+  location?: string;
+  eventTypes?: EventType[];
+  minimumScore?: number;
+  matchingCount?: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Alert {

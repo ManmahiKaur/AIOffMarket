@@ -3,12 +3,17 @@ import { supabase } from '../lib/supabase';
 import { mapDatabaseEvent } from '../lib/mapping';
 
 export const eventService = {
-  async getEvents(): Promise<PropertyEvent[]> {
-    const { data, error } = await supabase
+  async getEvents(eventType?: string): Promise<PropertyEvent[]> {
+    let query = supabase
       .from('events')
       .select('*')
-      .order('detected_at', { ascending: false })
-      .limit(100);
+      .order('detected_at', { ascending: false });
+      
+    if (eventType && eventType !== 'ALL') {
+      query = query.eq('event_type', eventType);
+    }
+    
+    const { data, error } = await query.limit(100);
       
     if (error) {
       console.error('Error fetching events:', error);

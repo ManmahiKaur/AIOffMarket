@@ -5,6 +5,7 @@ import { cn } from '../utils';
 
 export const Alerts: React.FC = () => {
   const [alerts, setAlerts] = useState(mockAlerts);
+  const [message, setMessage] = useState<string | null>(null);
 
   const toggleAlert = (id: string) => {
     setAlerts(alerts.map(a => a.id === id ? { ...a, isActive: !a.isActive } : a));
@@ -12,12 +13,21 @@ export const Alerts: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
+      {message && (
+        <div className="fixed top-20 right-8 p-4 rounded-lg shadow-lg z-50 text-sm font-medium transition-all animate-in fade-in slide-in-from-top-5 bg-blue-50 text-blue-700 border border-blue-200">
+          {message}
+          <button onClick={() => setMessage(null)} className="ml-4 opacity-70 hover:opacity-100">×</button>
+        </div>
+      )}
       <div className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Alerts</h1>
           <p className="text-slate-500">Manage notifications for market events and opportunities.</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white font-medium rounded-lg hover:bg-brand-700 transition-colors">
+        <button 
+          onClick={() => setMessage('Create Alert workflow is coming soon.')}
+          className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white font-medium rounded-lg hover:bg-brand-700 transition-colors"
+        >
           <Plus size={18} />
           Create Alert
         </button>
@@ -82,7 +92,10 @@ export const Alerts: React.FC = () => {
                   />
                 </button>
               </div>
-              <button className="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
+              <button 
+                onClick={() => setMessage('Alert settings are coming soon.')}
+                className="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+              >
                 <Settings2 size={20} />
               </button>
             </div>
