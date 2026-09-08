@@ -296,14 +296,14 @@ export const mockWatchlists: Watchlist[] = [
     id: 'wl-1',
     name: 'Parramatta Opportunities',
     description: 'High priority targets in Parramatta',
-    propertyIds: ['p-1', 'p-5'],
-    lastUpdated: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'wl-2',
     name: 'Sydney Price Drops',
-    propertyIds: ['p-1'],
-    lastUpdated: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
   },
 ];
 

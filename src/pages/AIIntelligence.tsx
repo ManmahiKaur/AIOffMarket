@@ -16,7 +16,6 @@ export const AIIntelligence: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   // Groq API Key modal & state
-  const [isGroqActive, setIsGroqActive] = useState<boolean>(() => isGroqConfigured());
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [groqKeyInput, setGroqKeyInput] = useState(() => getGroqApiKey());
   const [keySavedSuccess, setKeySavedSuccess] = useState(false);
@@ -55,7 +54,6 @@ export const AIIntelligence: React.FC = () => {
     e.preventDefault();
     setGroqApiKey(groqKeyInput.trim());
     const active = isGroqConfigured();
-    setIsGroqActive(active);
     setKeySavedSuccess(true);
     setTimeout(() => {
       setKeySavedSuccess(false);
