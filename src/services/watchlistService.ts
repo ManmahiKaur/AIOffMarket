@@ -1,4 +1,4 @@
-import type { Watchlist, Property, EventType } from '../types';
+import type { Watchlist, Property } from '../types';
 import { supabase } from '../lib/supabase';
 import { mapDatabaseProperty } from '../lib/mapping';
 

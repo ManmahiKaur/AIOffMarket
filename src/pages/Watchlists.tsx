@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Watchlist, EventType } from '../types';
+import type { Watchlist, EventType } from '../types';
 import { watchlistService } from '../services/watchlistService';
 import { Clock, MoreVertical, Building2, Plus, X, AlertCircle } from 'lucide-react';
 import { formatRelativeTime } from '../utils';
