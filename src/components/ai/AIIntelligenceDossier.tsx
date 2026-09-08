@@ -2,7 +2,6 @@ import React from 'react';
 import type { AIQueryResponse } from '../../services/aiService';
 import { useNavigate } from 'react-router-dom';
 import {
-  Building2,
   ChevronRight,
 } from 'lucide-react';
 import { formatCurrency } from '../../utils';
@@ -40,16 +39,9 @@ export const AIIntelligenceDossier: React.FC<AIIntelligenceDossierProps> = ({ do
 
 
 
-          {/* Top Matching Properties from Supabase */}
+          {/* Top Matching Properties from Live Database */}
           {dossier.topProperties.length > 0 && (
             <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <Building2 size={14} className="text-brand-400" />
-                  <span>Top Correlated Properties in Database ({dossier.topProperties.length})</span>
-                </h3>
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {dossier.topProperties.map((match) => (
                   <div

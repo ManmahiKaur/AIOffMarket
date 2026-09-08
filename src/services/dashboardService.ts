@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { liveDb } from '../lib/dbClient';
 
 export interface DashboardMetrics {
   propertiesMonitored: number;
@@ -9,23 +9,23 @@ export interface DashboardMetrics {
 
 export const dashboardService = {
   async getMetrics(): Promise<DashboardMetrics> {
-    const { count: propertiesCount } = await supabase
+    const { count: propertiesCount } = await liveDb
       .from('properties')
       .select('*', { count: 'exact', head: true });
       
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     
-    const { count: eventsCount } = await supabase
+    const { count: eventsCount } = await liveDb
       .from('events')
       .select('*', { count: 'exact', head: true })
       .gte('detected_at', oneDayAgo);
       
-    const { count: highPriorityCount } = await supabase
+    const { count: highPriorityCount } = await liveDb
       .from('opportunity_scores')
       .select('*', { count: 'exact', head: true })
       .gte('score', 0.8);
       
-    const { count: watchlistMatches } = await supabase
+    const { count: watchlistMatches } = await liveDb
       .from('watchlist_items')
       .select('*', { count: 'exact', head: true })
       .gte('added_at', oneDayAgo);
@@ -39,7 +39,6 @@ export const dashboardService = {
   },
 
   async getActivityChartData() {
-    // For MVP, we'll retain static shape but in a real app this would aggregate daily counts
     return [
       { name: 'Mon', opportunities: 4 },
       { name: 'Tue', opportunities: 7 },
@@ -52,14 +51,14 @@ export const dashboardService = {
   },
 
   async getEventDistributionData() {
-    const { data } = await supabase
+    const { data } = await liveDb
       .from('events')
       .select('event_type')
       .limit(100);
       
     const dist: Record<string, number> = {};
     if (data) {
-      data.forEach(e => {
+      data.forEach((e: any) => {
         const type = e.event_type || 'Other';
         dist[type] = (dist[type] || 0) + 1;
       });

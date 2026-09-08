@@ -34,9 +34,13 @@ export const Properties: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Properties</h1>
-        <p className="text-slate-500">Browse and monitor properties across your intelligence network.</p>
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Properties</h1>
+          <p className="text-slate-500">
+            Browse and monitor <span className="font-semibold text-slate-900">{properties.length.toLocaleString()}</span> live properties loaded directly from Live Database.
+          </p>
+        </div>
       </div>
 
       <div className="flex gap-4 mb-6">

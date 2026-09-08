@@ -89,7 +89,7 @@ export const Dashboard: React.FC = () => {
               <p className="text-sm font-medium text-slate-500">Properties Monitored</p>
             </div>
           </div>
-          <p className="text-xs text-slate-400">Indexed in Supabase database</p>
+          <p className="text-xs text-slate-400">Indexed in Live database</p>
         </div>
 
         <div className="premium-card p-6">
