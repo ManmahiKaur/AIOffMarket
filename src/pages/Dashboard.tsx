@@ -73,7 +73,7 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Good morning, Manmahi</h1>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Good morning!</h1>
         <p className="text-slate-500">Monitor property events and discover emerging off-market opportunities.</p>
       </div>
 
@@ -89,7 +89,7 @@ export const Dashboard: React.FC = () => {
               <p className="text-sm font-medium text-slate-500">Properties Monitored</p>
             </div>
           </div>
-          <p className="text-xs text-slate-400">Indexed in Supabase database</p>
+          {/* <p className="text-xs text-slate-400">Indexed in Supabase database</p> */}
         </div>
 
         <div className="premium-card p-6">
@@ -102,7 +102,7 @@ export const Dashboard: React.FC = () => {
               <p className="text-sm font-medium text-slate-500">Events Detected</p>
             </div>
           </div>
-          <p className="text-xs text-slate-400">Monitored across state registers</p>
+          {/* <p className="text-xs text-slate-400">Monitored across state registers</p> */}
         </div>
 
         <div className="premium-card p-6">
@@ -115,7 +115,7 @@ export const Dashboard: React.FC = () => {
               <p className="text-sm font-medium text-slate-500">High / Critical Priority</p>
             </div>
           </div>
-          <p className="text-xs text-slate-400">Opportunities requiring attention</p>
+          {/* <p className="text-xs text-slate-400">Opportunities requiring attention</p> */}
         </div>
 
         <div className="premium-card p-6">
@@ -128,7 +128,7 @@ export const Dashboard: React.FC = () => {
               <p className="text-sm font-medium text-slate-500">Watchlist Matches</p>
             </div>
           </div>
-          <p className="text-xs text-slate-400">Properties tracked in watchlists</p>
+          {/* <p className="text-xs text-slate-400">Properties tracked in watchlists</p> */}
         </div>
       </div>
 

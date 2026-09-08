@@ -53,7 +53,6 @@ export const AIIntelligence: React.FC = () => {
   const handleSaveGroqKey = (e: React.FormEvent) => {
     e.preventDefault();
     setGroqApiKey(groqKeyInput.trim());
-    const active = isGroqConfigured();
     setKeySavedSuccess(true);
     setTimeout(() => {
       setKeySavedSuccess(false);

@@ -17,7 +17,7 @@ const navItems = [
   { label: 'Opportunity Feed', icon: Activity, path: '/opportunities' },
   { label: 'Properties', icon: Building2, path: '/properties' },
   { label: 'Events', icon: Zap, path: '/events' },
-  { label: 'Watchlists', icon: Bookmark, path: '/watchlists' },
+  // { label: 'Watchlists', icon: Bookmark, path: '/watchlists' },
   { label: 'Alerts', icon: Bell, path: '/alerts' },
 ];
 
@@ -90,7 +90,7 @@ export const Sidebar: React.FC = () => {
         </nav>
       </div>
 
-      <div className="mt-auto p-4 border-t border-slate-800 m-4 rounded-lg bg-slate-800/50">
+      {/* <div className="mt-auto p-4 border-t border-slate-800 m-4 rounded-lg bg-slate-800/50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold">
             MK
@@ -100,7 +100,7 @@ export const Sidebar: React.FC = () => {
             <p className="text-xs text-slate-400 truncate">Property Intelligence Analyst</p>
           </div>
         </div>
-      </div>
+      </div> */}
     </aside>
   );
 };
