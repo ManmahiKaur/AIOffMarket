@@ -1,13 +1,12 @@
-// Use Vite proxy — Node.js doesn't send sec-fetch-* browser headers that Supabase blocks
-const SUPABASE_PROXY = '/api/supabase';
+const LIVE_DB_URL = (import.meta.env.VITE_LIVE_DATABASE_URL || '').replace(/\/$/, '');
 
 const headers = {
   'Content-Type': 'application/json'
 };
 
-export async function supabaseFetch<T>(endpoint: string, options: RequestInit = {}): Promise<{ data: T | null, error: any }> {
+export async function dbFetch<T>(endpoint: string, options: RequestInit = {}): Promise<{ data: T | null, error: any }> {
   try {
-    const res = await fetch(`${SUPABASE_PROXY}/rest/v1/${endpoint}`, {
+    const res = await fetch(`${LIVE_DB_URL}/${endpoint.replace(/^\//, '')}`, {
       ...options,
       headers: { ...headers, ...options.headers }
     });
@@ -27,7 +26,7 @@ export async function supabaseFetch<T>(endpoint: string, options: RequestInit = 
     const data = await res.json();
     return { data, error: null };
   } catch (error) {
-    console.error('Supabase fetch error:', error);
+    console.error('Live database fetch error:', error);
     return { data: null, error };
   }
 }

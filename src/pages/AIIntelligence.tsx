@@ -6,7 +6,7 @@ import {
   X
 } from 'lucide-react';
 import { aiService, type AIQueryResponse } from '../services/aiService';
-import { isGroqConfigured, getGroqApiKey, setGroqApiKey } from '../lib/groq';
+import { getGroqApiKey, setGroqApiKey } from '../lib/groq';
 import { AIQuestionInput, SUGGESTED_QUESTIONS } from '../components/ai/AIQuestionInput';
 import { AIIntelligenceDossier } from '../components/ai/AIIntelligenceDossier';
 import { AILoadingState } from '../components/ai/AILoadingState';
@@ -20,12 +20,12 @@ export const AIIntelligence: React.FC = () => {
   const [groqKeyInput, setGroqKeyInput] = useState(() => getGroqApiKey());
   const [keySavedSuccess, setKeySavedSuccess] = useState(false);
 
-  // Initial load: run default intelligence query
+  // Initial load: run default intelligence query (top high-priority opportunities)
   useEffect(() => {
     const init = async () => {
       setLoading(true);
       try {
-        const initialQuery = SUGGESTED_QUESTIONS[1].query;
+        const initialQuery = SUGGESTED_QUESTIONS[5].query;
         const initialDossier = await aiService.processNaturalLanguageQuery(initialQuery);
         setCurrentDossier(initialDossier);
       } catch (err) {
@@ -132,7 +132,7 @@ export const AIIntelligence: React.FC = () => {
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-600 space-y-1.5">
                 <div className="font-semibold text-slate-800">How it works:</div>
                 <div className="text-slate-500 leading-relaxed">
-                  The AI agent pulls real property and event data directly from Supabase, formats it into a grounded context prompt, and uses Groq LLaMA 3.3 to synthesize executive opportunity scores, seller motivation vectors, and acquisition steps.
+                  The AI agent pulls real property and event data directly from Live Database, formats it into a grounded context prompt, and uses Groq LLaMA 3.3 to synthesize executive opportunity scores, seller motivation vectors, and acquisition steps.
                 </div>
                 <a
                   href="https://console.groq.com/keys"

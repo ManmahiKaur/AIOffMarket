@@ -1,5 +1,5 @@
 /**
- * Simple in-memory TTL cache for Supabase fetch results.
+ * Simple in-memory TTL cache for live database fetch results.
  * Prevents redundant parallel/sequential fetches within the same session.
  */
 

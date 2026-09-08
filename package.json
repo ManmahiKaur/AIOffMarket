@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.114.0",
     "@tailwindcss/vite": "^4.3.3",
     "autoprefixer": "^10.5.4",
     "clsx": "^2.1.1",

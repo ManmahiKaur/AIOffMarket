@@ -1,32 +1,40 @@
 import type { Property } from '../types';
-import { supabase } from '../lib/supabase';
+import { liveDb } from '../lib/dbClient';
 import { mapDatabaseProperty } from '../lib/mapping';
 
 export const propertyService = {
   async getProperties(): Promise<Property[]> {
-    const { data, error } = await supabase
-      .from('properties')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(50);
-      
-    if (error) {
-      console.error('Error fetching properties:', error);
-      return [];
+    try {
+      // Parallel batch fetching to retrieve all 2,600+ records from live database
+      const [b1, b2, b3] = await Promise.all([
+        liveDb.from('properties').select('*').order('created_at', { ascending: false }).range(0, 999),
+        liveDb.from('properties').select('*').order('created_at', { ascending: false }).range(1000, 1999),
+        liveDb.from('properties').select('*').order('created_at', { ascending: false }).range(2000, 3999),
+      ]);
+
+      const allData = [
+        ...(b1.data || []),
+        ...(b2.data || []),
+        ...(b3.data || []),
+      ];
+
+      return allData.map(mapDatabaseProperty);
+    } catch (err) {
+      console.error('Error fetching all properties from live DB:', err);
+      const { data } = await liveDb.from('properties').select('*').range(0, 2999);
+      return (data || []).map(mapDatabaseProperty);
     }
-    
-    return (data || []).map(mapDatabaseProperty);
   },
 
   async getPropertyById(id: string): Promise<Property | undefined> {
-    const { data, error } = await supabase
+    const { data, error } = await liveDb
       .from('properties')
       .select('*')
       .eq('id', id)
       .limit(1);
       
     if (error || !data || data.length === 0) {
-      console.error(`Error fetching property ${id}:`, error);
+      console.error(`Error fetching property ${id} from live DB:`, error);
       return undefined;
     }
     
@@ -36,14 +44,14 @@ export const propertyService = {
   async searchProperties(query: string): Promise<Property[]> {
     const lowerQuery = `%${query.toLowerCase()}%`;
     
-    const { data, error } = await supabase
+    const { data, error } = await liveDb
       .from('properties')
       .select('*')
       .or(`address.ilike.${lowerQuery},suburb_name.ilike.${lowerQuery}`)
-      .limit(50);
+      .range(0, 2999);
       
     if (error) {
-      console.error('Error searching properties:', error);
+      console.error('Error searching properties in live DB:', error);
       return [];
     }
     

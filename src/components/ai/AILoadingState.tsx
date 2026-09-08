@@ -5,7 +5,7 @@ export const AILoadingState: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
 
   const steps = [
-    { text: 'Scanning 2,606 property records & tenure histories in Supabase...', icon: Database },
+    { text: 'Scanning 2,606 property records & tenure histories in Live Database...', icon: Database },
     { text: 'Correlating event timelines, price shifts & probate notices...', icon: ShieldAlert },
     { text: 'Evaluating vendor motivation vectors & opportunity scores (0-100)...', icon: Cpu },
     { text: 'Synthesizing actionable intelligence dossier & next steps...', icon: BrainCircuit },

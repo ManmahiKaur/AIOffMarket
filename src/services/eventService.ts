@@ -1,10 +1,10 @@
 import type { PropertyEvent } from '../types';
-import { supabase } from '../lib/supabase';
+import { liveDb } from '../lib/dbClient';
 import { mapDatabaseEvent } from '../lib/mapping';
 
 export const eventService = {
   async getEvents(eventType?: string): Promise<PropertyEvent[]> {
-    let query = supabase
+    let query = liveDb
       .from('events')
       .select('*')
       .order('detected_at', { ascending: false });
@@ -13,10 +13,10 @@ export const eventService = {
       query = query.eq('event_type', eventType);
     }
     
-    const { data, error } = await query.limit(100);
+    const { data, error } = await query.range(0, 2999);
       
     if (error) {
-      console.error('Error fetching events:', error);
+      console.error('Error fetching events from live DB:', error);
       return [];
     }
     
@@ -24,14 +24,14 @@ export const eventService = {
   },
 
   async getEventsByPropertyId(propertyId: string): Promise<PropertyEvent[]> {
-    const { data, error } = await supabase
+    const { data, error } = await liveDb
       .from('events')
       .select('*')
       .eq('property_id', propertyId)
       .order('detected_at', { ascending: false });
       
     if (error) {
-      console.error(`Error fetching events for property ${propertyId}:`, error);
+      console.error(`Error fetching events for property ${propertyId} from live DB:`, error);
       return [];
     }
     
